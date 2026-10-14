@@ -4,6 +4,12 @@
 > 自带 **网页控制面板**（手机浏览器直接控制，不用装 App）、**板子自发热点**（不用路由器也能连）、
 > 网页与屏幕**双向实时同步**，还有一套给外接单片机用的**串口事件协议**。
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PlatformIO](https://img.shields.io/badge/PlatformIO-pioarduino%2053.03.11-orange.svg)](https://github.com/pioarduino/platform-espressif32)
+[![Board](https://img.shields.io/badge/Board-VIEWE%20UEDX80480050E--WB--A-4F8CFF.svg)](#4-快速开始)
+[![LVGL](https://img.shields.io/badge/LVGL-9.5.0-8B5CF6.svg)](https://lvgl.io/)
+![Flash](https://img.shields.io/badge/Flash-25%25%20%2F%2016MB-22C55E.svg)
+
 ![8 个界面总览](docs/overview.png)
 
 *上排：首页 · 灯光 · 空调 · 窗帘　｜　下排：能耗 · 咖啡机 · 天气 · 设置（真机截屏）*
@@ -61,6 +67,14 @@
 ## 3. 网页控制面板（重点）
 
 板子自己就是一个 Web 服务器，**手机浏览器打开就能控制，不用装任何 App**。
+
+<p align="center">
+  <img src="docs/web-panel.png" width="266" alt="网页面板 · 首页">
+  <img src="docs/web-panel-coffee.png" width="266" alt="网页面板 · 咖啡机">
+  <img src="docs/web-panel-settings.png" width="266" alt="网页面板 · 设置">
+</p>
+
+*真机截屏（无头 Edge 实拍）：首页总览 / 咖啡机 / 设置。顶部 8 个页签与屏幕上的 8 个界面一一对应。*
 
 ### 三种访问方式
 
