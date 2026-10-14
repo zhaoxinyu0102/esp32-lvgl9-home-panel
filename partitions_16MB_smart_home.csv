@@ -1,0 +1,8 @@
+# Name,   Type, SubType, Offset,  Size, Flags
+# SquareLine coffee UI + LVGL 9 needs an app image larger than 5MB
+# (the ESP-IDF build of the same UI: 5360960 bytes).
+# 16MB flash -> app partition = 7MB.
+# NOTE: keep this file ASCII-only, PlatformIO parses it with the system locale codec (GBK on this machine).
+nvs,      data, nvs,     0x9000,  0x6000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  app,  factory, 0x10000, 0x700000,

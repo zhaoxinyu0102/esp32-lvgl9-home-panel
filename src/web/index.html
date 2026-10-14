@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0E1A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="智慧家居">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon.svg">
+<title>智慧家居</title>
+<style>
+  :root{
+    --bg:#080B16; --bg2:#111832; --card:#151D36; --card2:#1D2748; --line:#2A3556;
+    --txt:#EAF0FF; --dim:#96A3C6; --mute:#5D6A8E;
+    --acc:#4F8CFF; --acc2:#8B5CF6; --cyan:#22D3EE;
+    --ok:#22C55E; --warn:#F59E0B; --danger:#EF4444;
+    --r:18px;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Variable","Segoe UI","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+    background:
+      radial-gradient(1200px 600px at 100% -10%, rgba(79,140,255,.16), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(139,92,246,.14), transparent 60%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    color:var(--txt); min-height:100%;
+    padding:0 14px calc(24px + env(safe-area-inset-bottom));
+    max-width:760px; margin:0 auto;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- 顶部：标题 + 页签（整块吸顶） ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:30; margin:0 -14px 12px;
+    padding:12px 14px 0;
+    background:linear-gradient(180deg,rgba(8,11,22,.97),rgba(8,11,22,.86));
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(42,53,86,.6);
+  }
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px}
+  .brand{display:flex;align-items:center;gap:11px;min-width:0}
+  .logo{width:38px;height:38px;border-radius:12px;flex:none;
+    background:linear-gradient(135deg,var(--acc),var(--acc2));
+    display:grid;place-items:center;font-size:19px;
+    box-shadow:0 6px 18px rgba(79,140,255,.35)}
+  h1{font-size:17.5px;font-weight:800;letter-spacing:.3px}
+  .sub{font-size:11.5px;color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50vw}
+  .status{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--mute)}
+  .dot.on{background:var(--ok);box-shadow:0 0 0 4px rgba(34,197,94,.16);animation:pl 2.2s infinite}
+  @keyframes pl{50%{box-shadow:0 0 0 9px rgba(34,197,94,0)}}
+  /* 页签（可横向滑动，对应屏幕上的 8 个界面） */
+  .tabs{display:flex;gap:8px;overflow-x:auto;padding:0 0 11px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:none;background:rgba(255,255,255,.055);border:1px solid var(--line);color:var(--dim);
+    border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:650;cursor:pointer;transition:.16s;
+    white-space:nowrap;font-family:inherit}
+  .tabs button.active{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;color:#fff;
+    box-shadow:0 6px 18px rgba(79,140,255,.32)}
+  .tabs button:active{transform:scale(.95)}
+
+  .page{display:none}
+  .page.on{display:block;animation:fade .18s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  .card{
+    position:relative;background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--line);border-radius:var(--r);
+    padding:15px 16px;margin-bottom:12px;box-shadow:var(--shadow);
+  }
+  .card::before{content:'';position:absolute;inset:0 0 auto;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);border-radius:var(--r) var(--r) 0 0}
+  .card h2{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--dim);
+    letter-spacing:.4px;margin-bottom:12px}
+  .card h2 .ic{font-size:15px}
+  .card h2 .right{margin-left:auto;font-weight:600;color:var(--mute);font-size:12px}
+  .hint{font-size:11.5px;color:var(--mute);line-height:1.7}
+  .banner{display:none;background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.45);
+    color:#FCA5A5;border-radius:14px;padding:11px 14px;margin-bottom:12px;font-size:13px;font-weight:600}
+  .scenes{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+  .scene{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;
+    padding:12px 4px;color:var(--txt);font-size:12.5px;cursor:pointer;transition:.16s;font-weight:600;font-family:inherit}
+  .scene .ic{display:block;font-size:21px;margin-bottom:5px}
+  .scene.active{background:linear-gradient(135deg,rgba(79,140,255,.3),rgba(139,92,246,.25));
+    border-color:var(--acc);box-shadow:0 6px 18px rgba(79,140,255,.25)}
+  .scene:active{transform:scale(.95)}
+  /* 首页总览 */
+  .ov{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 0;border-bottom:1px solid rgba(42,53,86,.55);font-size:14.5px}
+  .ov:last-child{border-bottom:none;padding-bottom:2px}
+  .ov .k{color:var(--dim);display:flex;align-items:center;gap:8px}
+  .ov .v{font-weight:750;font-variant-numeric:tabular-nums;text-align:right}
+  .dev{padding:11px 0;border-bottom:1px solid rgba(42,53,86,.55)}
+  .dev:last-child{border-bottom:none;padding-bottom:2px}
+  .devhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .nm{font-size:15.5px;font-weight:650}
+  .rm{font-size:12px;color:var(--mute);margin-top:2px}
+  .switch{position:relative;width:52px;height:31px;flex:none}
+  .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:2}
+  .switch .tk{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.22s;pointer-events:none}
+  .switch .tk::after{content:'';position:absolute;top:3px;left:3px;width:25px;height:25px;border-radius:50%;
+    background:#fff;transition:.22s;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .switch input:checked+.tk{background:linear-gradient(90deg,var(--acc),var(--acc2))}
+  .switch input:checked+.tk::after{left:24px}
+  .sl{display:flex;align-items:center;gap:11px;margin-top:9px}
+  input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:7px;border-radius:999px;
+    background:linear-gradient(90deg,var(--acc) var(--p,0%),var(--line) var(--p,0%));outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+    background:#fff;border:3px solid var(--acc);cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--acc)}
+  .val{font-size:13px;color:var(--dim);min-width:48px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .dots{display:flex;gap:9px;margin-top:10px}
+  .dots span{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.22);transition:.15s}
+  .dots span:active{transform:scale(.9)}
+  .seg{display:flex;gap:7px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:56px;background:rgba(255,255,255,.055);border:1px solid var(--line);
+    color:var(--dim);border-radius:12px;padding:9px 4px;font-size:13px;cursor:pointer;transition:.15s;font-weight:600;font-family:inherit}
+  .seg button.active{background:linear-gradient(135deg,rgba(79,140,255,.32),rgba(139,92,246,.24));
+    border-color:var(--acc);color:#fff;box-shadow:0 5px 14px rgba(79,140,255,.22)}
+  .seg button:active{transform:scale(.96)}
+  .seg.mini button{font-size:12px;padding:7px 2px;min-width:44px}
+  .stepper{display:flex;align-items:center;justify-content:center;gap:22px;margin:6px 0 14px}
+  .stepper button{width:46px;height:46px;border-radius:15px;border:1px solid var(--line);
+    background:rgba(255,255,255,.06);color:#fff;font-size:23px;cursor:pointer;line-height:1;font-family:inherit}
+  .stepper button:active{transform:scale(.93)}
+  .stepper .big{font-size:46px;font-weight:800;min-width:96px;text-align:center;letter-spacing:-1px;
+    font-variant-numeric:tabular-nums}
+  .stepper .big small{font-size:17px;color:var(--dim);font-weight:600}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+  .kpi .cell{background:rgba(255,255,255,.045);border:1px solid rgba(42,53,86,.7);border-radius:14px;padding:11px 13px}
+  .kpi .v{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .kpi .v small{font-size:12px;color:var(--mute);font-weight:600;margin-left:2px}
+  .kpi .l{font-size:11.5px;color:var(--mute);margin-top:3px}
+  .bars{display:flex;align-items:flex-end;gap:7px;height:92px;margin-top:14px}
+  .bars .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+  .bars .col .b{background:linear-gradient(180deg,var(--acc),var(--acc2));border-radius:7px 7px 3px 3px;min-height:3px;opacity:.9}
+  .bars .col .t{font-size:10px;color:var(--mute);text-align:center;margin-top:6px;font-variant-numeric:tabular-nums}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+  .chip{font-size:12px;padding:7px 11px;border-radius:999px;background:rgba(34,197,94,.14);
+    border:1px solid rgba(34,197,94,.4);color:#86EFAC;cursor:pointer;font-weight:600}
+  .chip.bad{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.45);color:#FCA5A5}
+  .field{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .field label{font-size:13px;color:var(--dim);min-width:44px}
+  input[type=text],input[type=password]{flex:1;background:rgba(8,11,22,.75);border:1px solid var(--line);
+    color:var(--txt);border-radius:11px;padding:10px 12px;font-size:14px;outline:none;min-width:0;font-family:inherit}
+  input[type=text]:focus,input[type=password]:focus{border-color:var(--acc)}
+  .btn{background:linear-gradient(135deg,var(--acc),var(--acc2));border:none;color:#fff;border-radius:12px;
+    padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+  .btn.ghost{background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--dim)}
+  .btn:active{transform:scale(.96)}
+  .scanlist{margin-top:10px;max-height:190px;overflow:auto}
+  .scanrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;
+    border-radius:11px;background:rgba(255,255,255,.045);margin-bottom:6px;cursor:pointer;font-size:13.5px}
+  .scanrow:active{background:rgba(79,140,255,.18)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+  .kv{background:rgba(255,255,255,.04);border-radius:12px;padding:9px 11px}
+  .kv .k{font-size:11px;color:var(--mute)}
+  .kv .v{font-size:14px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums;word-break:break-all}
+  details summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;
+    font-size:13.5px;font-weight:700;color:var(--dim);padding:9px 0}
+  details summary::-webkit-details-marker{display:none}
+  details[open] summary{margin-bottom:8px}
+  .fcgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .fc{background:rgba(255,255,255,.045);border:1px solid rgba(42,53,86,.7);border-radius:14px;padding:11px 8px;text-align:center}
+  .fc .d{font-size:12.5px;color:var(--dim);font-weight:700}
+  .fc .t{font-size:11.5px;color:var(--mute);margin:5px 0 6px;min-height:16px}
+  .fc .h{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+  .fc .h small{display:block;font-size:12.5px;color:var(--mute);font-weight:600;margin-top:2px}
+  #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
+    background:rgba(30,39,70,.96);border:1px solid var(--acc);color:var(--txt);border-radius:999px;
+    padding:10px 20px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:.22s;
+    z-index:50;box-shadow:0 8px 26px rgba(0,0,0,.5);max-width:86vw;text-align:center}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  footer{text-align:center;color:var(--mute);font-size:11px;padding:14px 0 4px;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <header>
+    <div class="brand">
+      <div class="logo">🏠</div>
+      <div style="min-width:0">
+        <h1>智慧家居</h1>
+        <div class="sub" id="net">连接中...</div>
+      </div>
+    </div>
+    <div class="status"><span class="dot" id="dot"></span><span id="clock">--:--</span></div>
+  </header>
+  <nav class="tabs" id="tabs">
+    <button data-tab="0">🏠 首页</button>
+    <button data-tab="1">💡 灯光</button>
+    <button data-tab="2">❄️ 空调</button>
+    <button data-tab="3">🪟 窗帘</button>
+    <button data-tab="4">⚡ 能耗</button>
+    <button data-tab="5">☕ 咖啡</button>
+    <button data-tab="6">⛅ 天气</button>
+    <button data-tab="7">⚙️ 设置</button>
+  </nav>
+</div>
+
+<div class="banner" id="banner">⚠ 咖啡机提醒</div>
+
+<!-- ======================= 首页 ======================= -->
+<section class="page" data-page="0">
+  <div class="card">
+    <h2><span class="ic">🎬</span>快捷场景<span class="right" id="scene-cur">—</span></h2>
+    <div class="scenes" id="scenes"></div>
+  </div>
+  <div class="card">
+    <h2><span class="ic">📋</span>状态总览<span class="right" id="ov-time">—</span></h2>
+    <div class="ov"><div class="k">💡 灯光</div><div class="v" id="ov-lights">—</div></div>
+    <div class="ov"><div class="k">❄️ 空调</div><div class="v" id="ov-ac">—</div></div>
+    <div class="ov"><div class="k">🪟 窗帘</div><div class="v" id="ov-cur">—</div></div>
+    <div class="ov"><div class="k">☕ 咖啡机</div><div class="v" id="ov-sec">—</div></div>
+    <div class="ov"><div class="k">⚡ 能耗</div><div class="v" id="ov-energy">—</div></div>
+    <div class="ov"><div class="k">⛅ 天气</div><div class="v" id="ov-weather">—</div></div>
+  </div>
+</section>
+
+<!-- ======================= 灯光 ======================= -->
+<section class="page" data-page="1">
+  <div class="card">
+    <h2><span class="ic">💡</span>灯光<span class="right" id="lights-sum">—</span></h2>
+    <div class="seg mini" style="margin-bottom:6px">
+      <button data-all="1">全部打开</button>
+      <button data-all="0">全部关闭</button>
+    </div>
+    <div id="lights"></div>
+  </div>
+</section>
+
+<!-- ======================= 空调 ======================= -->
+<section class="page" data-page="2">
+  <div class="card">
+    <h2><span class="ic">❄️</span>空调<span class="right" id="ac-room">室温 --</span></h2>
+    <div class="devhead">
+      <div><div class="nm">电源</div><div class="rm" id="ac-state">已关闭</div></div>
+      <label class="switch"><input type="checkbox" id="ac-on"><span class="tk"></span></label>
+    </div>
+    <div class="stepper">
+      <button data-ac-t="-1">−</button>
+      <div class="big"><span id="ac-target">25</span><small>°C</small></div>
+      <button data-ac-t="1">+</button>
+    </div>
+    <div class="seg" id="ac-mode"></div>
+    <div style="height:8px"></div>
+    <div class="seg" id="ac-fan"></div>
+    <div class="devhead" style="margin-top:12px;padding-top:11px;border-top:1px solid rgba(42,53,86,.55)">
+      <div class="nm">上下摆风</div>
+      <label class="switch"><input type="checkbox" id="ac-swing"><span class="tk"></span></label>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= 窗帘 ======================= -->
+<section class="page" data-page="3">
+  <div class="card">
+    <h2><span class="ic">🪟</span>窗帘</h2>
+    <div id="curtains"></div>
+  </div>
+</section>
+
+<!-- ======================= 能耗 ======================= -->
+<section class="page" data-page="4">
+  <div class="card">
+    <h2><span class="ic">⚡</span>能耗<span class="right" id="energy-date">今日</span></h2>
+    <div class="kpi">
+      <div class="cell"><div class="v"><span id="en-today">0</span><small>kWh</small></div><div class="l">今日用电</div></div>
+      <div class="cell"><div class="v"><span id="en-power">0</span><small>W</small></div><div class="l">当前功率</div></div>
+      <div class="cell"><div class="v"><span id="en-cost">0</span><small>元</small></div><div class="l">今日电费</div></div>
+    </div>
+    <div class="bars" id="en-bars"></div>
+  </div>
+</section>
+
+<!-- ======================= 咖啡机 ======================= -->
+<section class="page" data-page="5">
+  <div class="card">
+    <h2><span class="ic">☕</span>咖啡机<span class="right" id="cf-stage">—</span></h2>
+
+    <div class="devhead">
+      <div><div class="nm" id="cf-name">咖啡</div><div class="rm" id="cf-sub">—</div></div>
+      <label class="switch"><input type="checkbox" id="cf-power"><span class="tk"></span></label>
+    </div>
+
+    <div style="margin-top:14px">
+      <div class="rm">制作进度 <b id="cf-prog-lbl" style="color:var(--txt);float:right">0%</b></div>
+      <div style="height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:7px">
+        <div id="cf-prog" style="height:100%;width:0%;border-radius:999px;
+             background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .3s"></div>
+      </div>
+    </div>
+
+    <div class="seg" id="cf-types" style="margin-top:14px"></div>
+
+    <div style="margin-top:14px">
+      <div class="rm">咖啡量 <b id="c-cm-v" style="color:var(--txt);float:right">--</b></div>
+      <input type="range" id="c-cm" min="10" max="250" style="margin-top:8px">
+      <div class="rm" style="margin-top:12px">牛奶量 <b id="c-mm-v" style="color:var(--txt);float:right">--</b></div>
+      <input type="range" id="c-mm" min="0" max="250" style="margin-top:8px">
+      <div class="rm" style="margin-top:12px">浓度 <b id="c-str-v" style="color:var(--txt);float:right">--</b></div>
+      <input type="range" id="c-str" min="1" max="5" style="margin-top:8px">
+      <div class="rm" style="margin-top:12px">水温 <b id="c-temp-v" style="color:var(--txt);float:right">--</b></div>
+      <input type="range" id="c-temp" min="80" max="96" style="margin-top:8px">
+    </div>
+
+    <div class="seg mini" id="cf-cups" style="margin-top:14px">
+      <button data-cups="1" data-i="1">x1 杯</button>
+      <button data-cups="2" data-i="2">x2 杯</button>
+    </div>
+
+    <button class="btn" id="cf-start" style="width:100%;margin-top:14px;padding:14px">开始萃取</button>
+
+    <div class="chips" style="margin-top:12px">
+      <span class="chip" id="cf-water">水 --%</span>
+      <span class="chip" id="cf-beans" style="background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.4);color:#FCD34D">豆 --%</span>
+      <span class="chip" id="cf-today" style="background:rgba(79,140,255,.14);border-color:rgba(79,140,255,.4);color:#93C5FD">今日 0 杯</span>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= 天气 ======================= -->
+<section class="page" data-page="6">
+  <div class="card">
+    <h2><span class="ic">⛅</span>天气<span class="right" id="wx-city">—</span></h2>
+    <div style="display:flex;align-items:flex-start;gap:15px">
+      <div id="wx-temp" style="font-size:52px;font-weight:800;line-height:1;letter-spacing:-2px">--<small style="font-size:20px;color:var(--dim)">°</small></div>
+      <div style="flex:1;padding-top:3px">
+        <div id="wx-text" style="font-size:16px;font-weight:750">—</div>
+        <div class="hint" id="wx-range" style="margin-top:5px">最高 -- / 最低 --</div>
+        <div class="hint" id="wx-upd">—</div>
+      </div>
+      <button class="btn ghost" id="wx-refresh" style="padding:9px 13px">刷新</button>
+    </div>
+
+    <div class="kpi" style="margin-top:14px">
+      <div class="cell"><div class="v"><span id="wx-feels">--</span><small>°C</small></div><div class="l">体感温度</div></div>
+      <div class="cell"><div class="v"><span id="wx-hum">--</span><small>%</small></div><div class="l">相对湿度</div></div>
+      <div class="cell"><div class="v"><span id="wx-wind">--</span><small>km/h</small></div><div class="l">风速</div></div>
+    </div>
+
+    <div id="wx-fc" class="fcgrid"></div>
+
+    <div class="field" style="margin-top:16px">
+      <label>城市</label>
+      <input type="text" id="city" placeholder="拼音/英文，如 hefei" autocomplete="off">
+      <button class="btn" id="city-save">保存</button>
+    </div>
+    <div class="hint" style="margin-top:8px">数据来自 Open-Meteo（免 API key）· 体感/湿度/风速是实时值 · 下排为未来 3 天预报</div>
+  </div>
+</section>
+
+<!-- ======================= 设置 ======================= -->
+<section class="page" data-page="7">
+  <div class="card">
+    <h2><span class="ic">⚙️</span>设置</h2>
+    <details open>
+      <summary>🖥 背光与显示</summary>
+      <div class="sl">
+        <input type="range" min="5" max="100" id="backlight">
+        <span class="val" id="backlight-v">--</span>
+      </div>
+      <div class="hint">调低背光更省电、夜里更护眼</div>
+    </details>
+    <details>
+      <summary>📶 WiFi 配网</summary>
+      <div class="field">
+        <label>名称</label>
+        <input type="text" id="w-ssid" placeholder="WiFi 名称" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>密码</label>
+        <input type="password" id="w-pass" placeholder="WiFi 密码">
+      </div>
+      <div class="field" style="gap:8px">
+        <button class="btn" id="w-save" style="flex:1">保存并连接</button>
+        <button class="btn ghost" id="w-scan">扫描</button>
+        <button class="btn ghost" id="w-forget">忘记</button>
+      </div>
+      <div class="scanlist" id="scanlist"></div>
+      <div class="hint" style="margin-top:8px">扫描时热点会短暂卡顿 1~2 秒，属正常</div>
+    </details>
+    <details>
+      <summary>ℹ️ 系统信息</summary>
+      <div class="grid2">
+        <div class="kv"><div class="k">当前 WiFi</div><div class="v" id="sys-ssid">—</div></div>
+        <div class="kv"><div class="k">局域网 IP</div><div class="v" id="sys-ip">—</div></div>
+        <div class="kv"><div class="k">热点直连</div><div class="v" id="sys-ap">—</div></div>
+        <div class="kv"><div class="k">热点已连设备</div><div class="v" id="sys-apc">—</div></div>
+        <div class="kv"><div class="k">剩余内存</div><div class="v" id="sys-heap">—</div></div>
+        <div class="kv"><div class="k">运行时长</div><div class="v" id="sys-up">—</div></div>
+      </div>
+      <div class="hint" style="margin-top:10px">手机连热点 <b id="ap-ssid">SmartHome-Panel</b>
+        （密码 <b id="ap-pass">12345678</b>）后打开 <b id="ap-ip">http://192.168.4.1</b>
+        · 固件 <span id="sys-ver">—</span></div>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div>智慧家居 · ESP32-S3 · LVGL 9.5</div>
+  <div id="foot-ip">—</div>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+/* =========================================================================
+   要点：
+   1) 控件只建一次（build），之后 update 只改属性，**绝不重建 DOM** ——
+      否则每秒的推送会把正在操作的开关/滑条冲掉（上一版"控制不了"的根因）。
+   2) 点/拖先做乐观更新，再发命令；服务器状态回来后再校正。
+   3) 事件全部委托在 document 上。
+   4) 顶部 8 个页签对应屏幕上的 8 个界面，切换记在 localStorage。
+   ========================================================================= */
+const $ = id => document.getElementById(id);
+const SCENE_ICON = ['🏠','🚪','😴','🎬'];
+const DOT = ['#FFD9A0','#FFFFFF','#4F8CFF','#8B5CF6','#22C55E','#EF4444'];
+const MODE = ['制冷','制热','送风','除湿'];
+const FAN = ['自动','低风','中风','高风'];
+const CUR_BTN = ['打开','停止','关闭'];
+
+let st = null, built = false, dragging = null, lastPush = 0;
+
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function send(o, tip){
+  if(tip) toast(tip);
+  fetch('/api', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(o)})
+    .catch(()=>toast('发送失败，检查连接'));
+}
+function setTxt(id, v){ const e=$(id); if(e && e.textContent !== v) e.textContent = v; }
+function setChk(id, v){ const e=$(id); if(e && e.checked !== !!v) e.checked = !!v; }
+function paintRange(e){ if(!e) return; const p = (e.value - e.min) / (e.max - e.min) * 100; e.style.setProperty('--p', p + '%'); }
+function setVal(id, v){ const e=$(id); if(e && +e.value !== +v){ e.value = v; paintRange(e); } }
+function setAct(sel, idx){ document.querySelectorAll(sel).forEach(b => b.classList.toggle('active', +b.dataset.i === idx)); }
+function uptimeStr(sec){ const m=Math.floor(sec/60), h=Math.floor(m/60); return h ? (h+'小时'+(m%60)+'分') : (m ? (m+'分'+(sec%60)+'秒') : (sec+'秒')); }
+
+/* ---------------- 顶部页签 ----------------
+ * 双向同步：点网页页签 → 发 {c:'ui'} 让屏幕也切到那一页；
+ *           屏幕上切页 → 状态里的 screen 变了，网页页签跟着切。
+ * 刚点完的 2.5 秒内忽略设备回报（否则命令还没生效时会先被旧值弹回去）。 */
+let curPg = 0, intentUntil = 0;
+function showPage(n, fromDevice){
+  n = Math.max(0, Math.min(7, n|0));
+  curPg = n;
+  try{ localStorage.setItem('sh_page', n); }catch(e){}
+  document.querySelectorAll('.page').forEach(s => s.classList.toggle('on', +s.dataset.page === n));
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', +b.dataset.tab === n));
+  if(!fromDevice){
+    intentUntil = Date.now() + 2500;
+    send({c:'ui', id:n});                 /* 屏幕跟着切到这一页 */
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', ()=>showPage(+b.dataset.tab)));
+let page0 = 0;
+try{ page0 = +(localStorage.getItem('sh_page') || 0); }catch(e){}
+showPage(page0, true);
+
+/* ---------------- 建控件（只做一次） ---------------- */
+function build(s){
+  $('scenes').innerHTML = (s.scenes||[]).map((n,i)=>
+    `<button class="scene" data-scene="${i}"><span class="ic">${SCENE_ICON[i]||'✨'}</span>${n.replace('模式','')}</button>`).join('');
+
+  $('lights').innerHTML = (s.lights||[]).map((l,i)=>`
+    <div class="dev">
+      <div class="devhead">
+        <div><div class="nm">${l.name}</div><div class="rm" id="lb-${i}">亮度 --</div></div>
+        <label class="switch"><input type="checkbox" id="ls-${i}"><span class="tk"></span></label>
+      </div>
+      <div class="sl">
+        <input type="range" min="1" max="100" id="lr-${i}" data-bri="${i}">
+        <span class="val" id="lv-${i}">--</span>
+      </div>
+      <div class="dots" id="ld-${i}" style="display:none"></div>
+    </div>`).join('');
+
+  $('ac-mode').innerHTML = MODE.map((m,i)=>`<button data-ac-m="${i}" data-i="${i}">${m}</button>`).join('');
+  $('ac-fan').innerHTML  = FAN.map((f,i)=>`<button data-ac-f="${i}" data-i="${i}">${f}</button>`).join('');
+
+  $('curtains').innerHTML = (s.cur||[]).map((c,i)=>`
+    <div class="dev">
+      <div class="devhead">
+        <div><div class="nm">${c.name}</div><div class="rm" id="cr-${i}">--</div></div>
+        <div class="seg mini" style="flex:none;width:auto">
+          ${CUR_BTN.map((t,k)=>`<button data-cur="${k}" data-id="${i}">${t}</button>`).join('')}
+        </div>
+      </div>
+      <div class="sl">
+        <input type="range" min="0" max="100" id="cp-${i}" data-pos="${i}">
+        <span class="val" id="cv-${i}">--</span>
+      </div>
+    </div>`).join('');
+
+  $('cf-types').innerHTML = (s.coffee_types||[]).map((n,i)=>
+    `<button data-ctype="${i}" data-i="${i}">${n}</button>`).join('');
+
+  $('en-bars').innerHTML = ((s.energy && s.energy.days) ? s.energy.days : [0,0,0,0,0,0,0]).map((d,i)=>
+    `<div class="col"><div class="b" id="eb-${i}" style="height:3px"></div><div class="t" id="et-${i}">${i===6?'今天':(6-i)+'天前'}</div></div>`).join('');
+
+  built = true;
+}
+
+/* ---------------- 用状态刷新界面（只改属性，不重建） ---------------- */
+function update(s){
+  st = s; lastPush = Date.now();
+  if(!built) build(s);
+
+  const ip = (s.wifi && s.wifi.ip) || '';
+  setTxt('net', (s.wifi && s.wifi.state===2) ? ((s.wifi.ssid||'') + ' · ' + ip) : (ip || '未连接'));
+  setTxt('clock', s.time || '--:--');
+  $('dot').className = 'dot ' + ((s.wifi && s.wifi.state===2) ? 'on' : '');
+
+  /* 屏幕上切了页 → 网页页签跟着切 */
+  if(typeof s.screen === 'number' && s.screen >= 0 && s.screen !== curPg && Date.now() > intentUntil){
+    showPage(s.screen, true);
+  }
+
+  const w = s.weather || {};
+  if(s.weather){
+    $('wx-temp').innerHTML = w.temp + '<small style="font-size:20px;color:var(--dim)">°</small>';
+    setTxt('wx-city', w.city || '');
+    setTxt('wx-text', w.text || '—');
+    setTxt('wx-range', '最高 ' + (w.high!=null?w.high:'--') + '° / 最低 ' + (w.low!=null?w.low:'--') + '°');
+    setTxt('wx-upd', w.demo ? '演示数据（未联网）' : ('更新于 ' + (w.updated!=null?w.updated:0) + ' 分钟前'));
+    setTxt('wx-feels', w.feels!=null ? w.feels : '--');
+    setTxt('wx-hum', w.hum!=null ? w.hum : '--');
+    setTxt('wx-wind', w.wind!=null ? w.wind : '--');
+    const fc = w.fc || [];
+    const stamp = fc.map(f => (f.day||'') + f.high + '/' + f.low).join('|');
+    if(fc.length && $('wx-fc').dataset.stamp !== stamp){
+      $('wx-fc').dataset.stamp = stamp;
+      $('wx-fc').innerHTML = fc.map(f =>
+        `<div class="fc"><div class="d">${f.day||''}</div><div class="t">${f.text||''}</div>` +
+        `<div class="h">${f.high}°<small>${f.low}°</small></div></div>`).join('');
+    }
+  }
+
+  const sc = s.scenes || [];
+  setTxt('scene-cur', (typeof s.scene === 'number' && s.scene >= 0 && sc[s.scene]) ? sc[s.scene] : '未应用');
+  document.querySelectorAll('[data-scene]').forEach(b => b.classList.toggle('active', +b.dataset.scene === s.scene));
+
+  let onCnt = 0;
+  (s.lights||[]).forEach((l,i)=>{
+    if(l.on) onCnt++;
+    setChk('ls-'+i, l.on);
+    if(dragging !== 'lr-'+i) setVal('lr-'+i, l.br);
+    setTxt('lv-'+i, l.br + '%');
+    setTxt('lb-'+i, l.on ? ('已开启 · 亮度 ' + l.br + '%') : '已关闭');
+    const dl = $('ld-'+i);
+    if(dl){
+      if(l.mode === 1){
+        if(dl.dataset.mode !== '1'){
+          dl.dataset.mode = '1';
+          dl.innerHTML = DOT.map((c,k)=>`<span data-color="${k}" data-lid="${i}" style="background:${c}"></span>`).join('');
+        }
+        dl.querySelectorAll('span').forEach(sp=>{
+          const rgb = parseInt(DOT[+sp.dataset.color].slice(1),16);
+          sp.style.outline = (l.rgb === rgb) ? '2px solid #fff' : 'none';
+        });
+        dl.style.display = 'flex';
+      } else { dl.style.display = 'none'; dl.dataset.mode = '0'; }
+    }
+  });
+  setTxt('lights-sum', onCnt + ' / ' + (s.lights||[]).length + ' 开启');
+
+  const a = s.ac || {};
+  setChk('ac-on', a.on);
+  setTxt('ac-target', (a.target != null ? a.target : 25));
+  setTxt('ac-room', '室温 ' + ((a.room||0)/10).toFixed(1) + '°C');
+  setTxt('ac-state', a.on ? (MODE[a.mode] + ' · ' + FAN[a.fan] + '风') : '已关闭');
+  setAct('#ac-mode button', a.mode);
+  setAct('#ac-fan button', a.fan);
+  setChk('ac-swing', a.swing);
+
+  (s.cur||[]).forEach((c,i)=>{
+    setTxt('cr-'+i, c.dir>0 ? '正在打开...' : (c.dir<0 ? '正在关闭...' : (c.pos===0 ? '已关闭' : (c.pos===100 ? '已打开' : ('暂停在 ' + c.pos + '%')))));
+    if(dragging !== 'cp-'+i) setVal('cp-'+i, c.pos);
+    setTxt('cv-'+i, c.pos + '%');
+  });
+
+  /* ---- 咖啡机 ---- */
+  const cf = s.coffee || {};
+  setChk('cf-power', cf.power);
+  setTxt('cf-stage', cf.brewing ? (cf.stage_text + ' ' + cf.progress + '%') : (cf.power ? '待机' : '已关机'));
+  setTxt('cf-name', cf.name || '咖啡');
+  setTxt('cf-sub', (cf.coffee_ml||0) + 'ml 咖啡' + ((cf.milk_ml>0) ? (' + ' + cf.milk_ml + 'ml 牛奶') : ' · 不加奶'));
+  $('cf-prog').style.width = (cf.progress||0) + '%';
+  setTxt('cf-prog-lbl', (cf.progress||0) + '%');
+  setAct('#cf-types button', cf.type);
+  setAct('#cf-cups button', (cf.cups||1) - 1);          /* data-i 是 1/2，用索引对齐 */
+  if(dragging !== 'c-cm')   { setVal('c-cm', cf.coffee_ml); }
+  if(dragging !== 'c-mm')   { setVal('c-mm', cf.milk_ml); }
+  if(dragging !== 'c-str')  { setVal('c-str', cf.strength); }
+  if(dragging !== 'c-temp') { setVal('c-temp', cf.temp); }
+  setTxt('c-cm-v', (cf.coffee_ml||0) + ' ml');
+  setTxt('c-mm-v', (cf.milk_ml||0) + ' ml');
+  setTxt('c-str-v', (cf.strength||0) + ' 级');
+  setTxt('c-temp-v', (cf.temp||0) + ' 度');
+  const sb = $('cf-start');
+  sb.textContent = cf.brewing ? '停止萃取' : '开始萃取';
+  sb.style.background = cf.brewing ? 'linear-gradient(135deg,#EF4444,#F59E0B)' : '';
+  setTxt('cf-water', '水 ' + (cf.water||0) + '%');
+  setTxt('cf-beans', '豆 ' + (cf.beans||0) + '%');
+  setTxt('cf-today', '今日 ' + (cf.cups_today||0) + ' 杯');
+  const warn = !cf.water ? '⚠ 水箱没水了，请加水' : (!cf.beans ? '⚠ 咖啡豆没了，请加豆' : '');
+  $('banner').style.display = warn ? 'block' : 'none';
+  if(warn) $('banner').textContent = warn;
+
+  const e = s.energy || {};
+  setTxt('en-today', (e.today||0).toFixed(2));
+  setTxt('en-power', e.power||0);
+  setTxt('en-cost', ((e.today||0) * (e.tariff||0.558)).toFixed(2));
+  const days = e.days || [];
+  const max = Math.max.apply(null, days.concat([0.1]));
+  days.forEach((d,i)=>{
+    const b = $('eb-'+i); if(b) b.style.height = Math.max(3, Math.round(d/max*72)) + 'px';
+    const t = $('et-'+i); if(t) t.textContent = (i===6 ? '今天' : (6-i)+'天前');
+  });
+  setTxt('energy-date', '电价 ' + (e.tariff||0.558) + ' 元/kWh');
+
+  /* 首页总览 */
+  setTxt('ov-time', s.time || '—');
+  setTxt('ov-lights', onCnt + ' / ' + (s.lights||[]).length + ' 开启');
+  setTxt('ov-ac', a.on ? (MODE[a.mode] + ' ' + a.target + '°C · ' + FAN[a.fan] + '风') : '已关闭');
+  setTxt('ov-cur', (s.cur||[]).map(c=>c.pos+'%').join(' / '));
+  setTxt('ov-sec', cf.brewing ? ('制作中 ' + cf.progress + '%') : (cf.power ? ((cf.name||'咖啡') + ' 待机') : '已关机'));
+  setTxt('ov-energy', (e.today||0).toFixed(2) + ' kWh · ' + (e.power||0) + 'W');
+  setTxt('ov-weather', s.weather ? (s.weather.temp + '° ' + (s.weather.text||'')) : '—');
+
+  if(typeof s.backlight === 'number'){
+    if(dragging !== 'backlight') setVal('backlight', s.backlight);
+    setTxt('backlight-v', s.backlight + '%');
+  }
+
+  if(s.ap){
+    setTxt('ap-ssid', s.ap.ssid || 'SmartHome-Panel');
+    setTxt('ap-pass', s.ap.pass || '');
+    setTxt('ap-ip', 'http://' + (s.ap.ip || '192.168.4.1'));
+    setTxt('sys-ap', (s.ap.ssid||'—') + ' / ' + (s.ap.ip||'—'));
+    setTxt('sys-apc', (s.ap.clients||0) + ' 台');
+  }
+  if(s.sys){
+    setTxt('sys-heap', Math.round((s.sys.heap||0)/1024) + ' KB');
+    setTxt('sys-up', uptimeStr(s.sys.uptime||0));
+    setTxt('sys-ver', s.sys.ver || '—');
+  }
+  setTxt('sys-ssid', (s.wifi && s.wifi.ssid) || '—');
+  setTxt('sys-ip', ip || '—');
+  setTxt('foot-ip', (ip ? 'http://'+ip : '') + (s.ap ? (' · http://' + s.ap.ip) : ''));
+  if(document.activeElement !== $('city') && s.weather && s.weather.city && !$('city').value) $('city').value = s.weather.city;
+
+  const scan = (s.wifi && s.wifi.scan) || [];
+  const stamp = scan.length + ':' + (scan[0] ? scan[0].ssid : '');
+  if(scan.length && $('scanlist').dataset.stamp !== stamp){
+    $('scanlist').dataset.stamp = stamp;
+    $('scanlist').innerHTML = scan.map(x=>
+      `<div class="scanrow" data-pick="${x.ssid}"><span>${x.ssid}</span><span style="color:var(--mute);font-size:12px">${x.rssi} dBm</span></div>`).join('');
+  }
+}
+
+function opt(fn){ if(st){ fn(st); update(st); } }
+
+/* ---------------- 事件（全部委托） ---------------- */
+document.addEventListener('click', e=>{
+  const t = e.target.closest('[data-scene],[data-all],[data-cur],[data-color],[data-ctype],[data-cups],[data-ac-m],[data-ac-f],[data-ac-t],[data-pick]');
+  if(!t) return;
+  const d = t.dataset;
+
+  if(d.scene !== undefined){
+    opt(s=>{ s.scene = +d.scene; });
+    send({c:'scene', id:+d.scene}, '已应用 ' + ((st.scenes||[])[+d.scene]||'场景'));
+  } else if(d.all !== undefined){
+    const on = +d.all;
+    opt(s=>{ s.lights.forEach(l=>l.on = on); });
+    send({c:'light_all', on}, on ? '灯光 全部打开' : '灯光 全部关闭');
+  } else if(d.cur !== undefined){
+    const id=+d.id, a=+d.cur;
+    opt(s=>{ s.cur[id].dir = (a===0?1:(a===2?-1:0)); });
+    send({c:'cur', id, a}, (st.cur[id].name) + ' ' + CUR_BTN[a]);
+  } else if(d.color !== undefined){
+    const id=+d.lid, rgb=parseInt(DOT[+d.color].slice(1),16);
+    opt(s=>{ s.lights[id].rgb = rgb; s.lights[id].mode = 1; s.lights[id].on = 1; });
+    send({c:'light', id, rgb, on:1}, st.lights[id].name + ' 颜色已切换');
+  } else if(d.ctype !== undefined){
+    const i=+d.ctype, nm=(st.coffee_types||[])[i]||'咖啡';
+    opt(s=>{ s.coffee.type = i; s.coffee.name = nm; });
+    send({c:'coffee', type:i}, '已选 ' + nm);
+  } else if(d.cups !== undefined){
+    const n=+d.cups;
+    opt(s=>{ s.coffee.cups = n; });
+    send({c:'coffee', cups:n}, '杯数 x' + n);
+  } else if(d.acM !== undefined){
+    opt(s=>{ s.ac.mode = +d.acM; });
+    send({c:'ac', mode:+d.acM}, '空调 ' + MODE[+d.acM] + '模式 已开启');
+  } else if(d.acF !== undefined){
+    opt(s=>{ s.ac.fan = +d.acF; });
+    send({c:'ac', fan:+d.acF}, '空调 风速 ' + FAN[+d.acF]);
+  } else if(d.acT !== undefined){
+    const v = Math.min(30, Math.max(16, (st.ac.target||25) + (+d.acT)));
+    opt(s=>{ s.ac.target = v; });
+    send({c:'ac', target:v}, '空调 目标温度 ' + v + '°C');
+  } else if(d.pick !== undefined){
+    $('w-ssid').value = d.pick; toast('已填入 ' + d.pick + '，输入密码后保存');
+  }
+});
+
+document.addEventListener('change', e=>{
+  const t = e.target;
+  if(t.id === 'ac-on'){ const on = t.checked?1:0; opt(s=>{ s.ac.on = on; }); send({c:'ac', on}, on?'空调 已开启':'空调 已关闭'); }
+  else if(t.id === 'ac-swing'){ const on = t.checked?1:0; opt(s=>{ s.ac.swing = on; }); send({c:'ac', swing:on}, on?'空调 摆风 已开启':'空调 摆风 已关闭'); }
+  else if(t.id === 'cf-power'){ const on = t.checked?1:0; opt(s=>{ s.coffee.power = on; }); send({c:'coffee', power:on}, on?'咖啡机 已开机':'咖啡机 待机'); }
+  else if(t.id.startsWith('ls-')){ const i=+t.id.slice(3), on = t.checked?1:0; opt(s=>{ s.lights[i].on = on; }); send({c:'light', id:i, on}, st.lights[i].name + (on?' 已开启':' 已关闭')); }
+  /* 滑条松手也走一次（有些浏览器 pointerup 不触发；双发是幂等的，无害） */
+  else if(t.id.startsWith('lr-')){ const i=+t.id.slice(3); opt(s=>{ s.lights[i].on = 1; s.lights[i].br = +t.value; }); send({c:'light', id:i, br:+t.value, on:1}, st.lights[i].name + ' 亮度 ' + t.value + '%'); dragging = null; }
+  else if(t.id.startsWith('cp-')){ const i=+t.id.slice(3); opt(s=>{ s.cur[i].pos = +t.value; }); send({c:'cur', id:i, a:3, pos:+t.value}, st.cur[i].name + ' 位置 ' + t.value + '%'); dragging = null; }
+  else if(t.id === 'backlight'){ send({c:'backlight', pct:+t.value}, '背光 ' + t.value + '%'); }
+  else if(t.id.startsWith('c-')){ coffeeSlider(t); }
+});
+
+document.addEventListener('input', e=>{
+  const t = e.target;
+  if(t.id && t.id.startsWith('lr-')){ const i=+t.id.slice(3); paintRange(t); setTxt('lv-'+i, t.value+'%'); setTxt('lb-'+i, '亮度 ' + t.value + '%'); }
+  else if(t.id && t.id.startsWith('cp-')){ const i=+t.id.slice(3); paintRange(t); setTxt('cv-'+i, t.value+'%'); }
+  else if(t.id === 'backlight'){ paintRange(t); setTxt('backlight-v', t.value+'%'); }
+  else if(t.id.startsWith('c-')){ paintRange(t);
+    if(t.id==='c-cm')   setTxt('c-cm-v', t.value+' ml');
+    if(t.id==='c-mm')   setTxt('c-mm-v', t.value+' ml');
+    if(t.id==='c-str')  setTxt('c-str-v', t.value+' 级');
+    if(t.id==='c-temp') setTxt('c-temp-v', t.value+' 度');
+  }
+});
+
+document.addEventListener('pointerdown', e=>{ if(e.target.type === 'range') dragging = e.target.id; });
+document.addEventListener('pointerup', e=>{
+  const t = e.target;
+  if(!t || t.type !== 'range') return;
+  if(t.id.startsWith('lr-')){
+    const i=+t.id.slice(3);
+    opt(s=>{ s.lights[i].on = 1; s.lights[i].br = +t.value; });
+    send({c:'light', id:i, br:+t.value, on:1}, st.lights[i].name + ' 亮度 ' + t.value + '%');
+  } else if(t.id.startsWith('cp-')){
+    const i=+t.id.slice(3);
+    opt(s=>{ s.cur[i].pos = +t.value; });
+    send({c:'cur', id:i, a:3, pos:+t.value}, st.cur[i].name + ' 位置 ' + t.value + '%');
+  } else if(t.id === 'backlight'){
+    send({c:'backlight', pct:+t.value}, '背光 ' + t.value + '%');
+  } else if(t.id.startsWith('c-')){
+    coffeeSlider(t);
+  }
+  dragging = null;
+});
+
+/* 咖啡参数滑条：四个 id 前缀都是 c- */
+function coffeeSlider(el){
+  const id = el.id, v = +el.value;
+  if(id === 'c-cm'){   opt(s=>{ s.coffee.coffee_ml = v; }); send({c:'coffee', coffee_ml:v}); }
+  else if(id === 'c-mm'){  opt(s=>{ s.coffee.milk_ml = v; });   send({c:'coffee', milk_ml:v}); }
+  else if(id === 'c-str'){ opt(s=>{ s.coffee.strength = v; });  send({c:'coffee', strength:v}); }
+  else if(id === 'c-temp'){opt(s=>{ s.coffee.temp = v; });      send({c:'coffee', temp:v}); }
+}
+$('cf-start').onclick = ()=>{ const brew = st && st.coffee && st.coffee.brewing;
+  send(brew ? {c:'coffee', stop:1} : {c:'coffee', start:1}, brew ? '已停止萃取' : '开始萃取...'); };
+$('wx-refresh').onclick = ()=>{ send({c:'wrefresh'}, '正在刷新天气...'); };
+$('city-save').onclick = ()=>{ const v=$('city').value.trim(); if(!v){ toast('请输入城市名（拼音）'); return; } send({c:'city', name:v}, '天气城市 → ' + v); };
+$('w-save').onclick   = ()=>{ const s=$('w-ssid').value.trim(), p=$('w-pass').value;
+  if(!s){ toast('请先输入或扫描 WiFi 名称'); return; } send({c:'wifi', ssid:s, pass:p}, '正在连接 ' + s + ' ...'); };
+$('w-scan').onclick   = ()=>{ toast('正在扫描附近 WiFi...'); send({c:'scan'}); };
+$('w-forget').onclick = ()=>{ send({c:'wifi_forget'}, '已清除保存的 WiFi'); };
+
+/* ---------------- 数据通道 ---------------- */
+fetch('/api/state').then(r=>r.json()).then(update).catch(()=>toast('连不上板子，检查 WiFi'));
+
+/* 实时推送：走 81 端口（80 端口的 WebServer 不支持长连接，会 Connection: close） */
+let sseOk = false;
+try{
+  const es = new EventSource('http://' + location.hostname + ':81/events');
+  es.onopen    = ()=>{ sseOk = true; };
+  es.onmessage = ev => { sseOk = true; try{ update(JSON.parse(ev.data)); }catch(err){} };
+  es.onerror   = ()=>{ sseOk = false; };   /* 浏览器会自动重连 */
+}catch(e){}
+
+/* 兜底轮询：不管推送通不通，屏幕上的改动最多 1.2 秒也会同步到网页 */
+setInterval(()=>{
+  if(!sseOk || (Date.now() - lastPush) > 2500){
+    fetch('/api/state').then(r=>r.json()).then(update).catch(()=>{});
+  }
+}, 1200);
+</script>
+</body>
+</html>

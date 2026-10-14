@@ -1,0 +1,33 @@
+MIT License
+
+Copyright (c) 2026 zhaoxinyu0102
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Third-party components bundled in this repository keep their own licenses:
+
+- LVGL 9.5.0 (lib/lvgl) - MIT License
+- ESP32_Display_Panel / esp-lib-utils (lib/) - Apache License 2.0 (Espressif)
+- ArduinoJson 6.21.x (lib/ArduinoJson) - MIT License
+- Source Han Sans / 思源黑体 font subset (src/lv_font_cjk_24.c) - SIL Open Font License 1.1
+- Coffee machine UI assets (src/ui/images/coffee/) - from the lvgl_v9_coffee example
+  in the same vendor SDK package (SquareLine Studio export)
+- Weather data - Open-Meteo (https://open-meteo.com), CC-BY-4.0
